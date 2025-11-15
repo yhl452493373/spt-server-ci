@@ -54,4 +54,4 @@ if [ ! -f "sptLogger.json" ]; then
   fi
 fi
 
-chmod +x SPTarkov.Server && ./SPTarkov.Server
+chmod +x SPT.Server.Linux && ./SPT.Server.Linux
