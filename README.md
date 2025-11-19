@@ -2,6 +2,7 @@
 
 + [build-launcher.sh](build-launcher.sh) 用于构建启动器
 + [build-server.sh](build-server.sh) 用于构建服务端镜像
++ [bin](bin)目录下的[zip](bin/zip)和[unzip](bin/unzip)是ubuntu中使用的zip压缩和解压缩软件的二进制文件
 
 ## [build-launcher.sh](build-launcher.sh) 参数说明
 

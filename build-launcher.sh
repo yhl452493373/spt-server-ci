@@ -122,12 +122,12 @@ echo "Launcher Commit: $LAUNCHER_COMMIT_ID"
 
 # 生成压缩文件名
 if [ "$BUILD_ALL" = true ]; then
-  ARCHIVE_NAME="SPT-Launcher-${SPT_VERSION}-$DATE_TIME-${CLIENT_VERSION}-L${LAUNCHER_COMMIT_ID}-M${MODULES_COMMIT_ID}.7z"
+  ARCHIVE_NAME="SPT-Launcher-${SPT_VERSION}-$DATE_TIME-${CLIENT_VERSION}-L${LAUNCHER_COMMIT_ID}-M${MODULES_COMMIT_ID}.zip"
 else
   if [ "$BUILD_MODULES" = true ]; then
-    ARCHIVE_NAME="SPT-Modules-${SPT_VERSION}-$DATE_TIME-${CLIENT_VERSION}-${MODULES_COMMIT_ID}.7z"
+    ARCHIVE_NAME="SPT-Modules-${SPT_VERSION}-$DATE_TIME-${CLIENT_VERSION}-${MODULES_COMMIT_ID}.zip"
   else
-    ARCHIVE_NAME="SPT-Launcher-${SPT_VERSION}-$DATE_TIME-${CLIENT_VERSION}-${LAUNCHER_COMMIT_ID}.7z"
+    ARCHIVE_NAME="SPT-Launcher-${SPT_VERSION}-$DATE_TIME-${CLIENT_VERSION}-${LAUNCHER_COMMIT_ID}.zip"
   fi
 fi
 
@@ -211,7 +211,7 @@ if [ "$BUILD_MODULES" = "true" ]; then
     echo "解压 Managed.zip 文件..."
     mkdir -p modules/project/Shared/Managed
     cd modules/project/Shared/Managed
-    7z x "$MANAGED_ZIP_FILE" -aoa
+    unzip -q -o "$MANAGED_ZIP_FILE"
     echo "Managed.zip 解压完毕."
 
     # 检查解压后是否有子目录，如果有则移动文件到当前目录
@@ -325,7 +325,7 @@ if [ "$BUILD_MODULES" = "true" ] && [ "$BUILD_LAUNCHER" = "true" ]; then
         echo "压缩目录: $(pwd)"
         echo "压缩文件: $ARCHIVE_NAME"
 
-        7z a -mx=9 -md=128m -mfb=273 -ms=on -mmt=on "$ARCHIVE_NAME" .
+        zip -r -9 "$ARCHIVE_NAME" .
 
         # 计算文件信息
         FILE_SIZE=$(stat -c %s "$ARCHIVE_NAME")
@@ -350,7 +350,7 @@ else
         echo "压缩目录: $(pwd)"
         echo "压缩文件: $ARCHIVE_NAME"
 
-        7z a -mx=9 -m0=lzma2 "$ARCHIVE_NAME" .
+        zip -r -9 "$ARCHIVE_NAME" .
 
         # 计算文件信息
         FILE_SIZE=$(stat -c %s "$ARCHIVE_NAME")
@@ -383,6 +383,8 @@ docker run --rm \
   -v "$(pwd)/$OUTPUT_DIR:/output" \
   -v "$(realpath $MANAGED_ZIP_FILE):/Managed.zip:ro" \
   -v "$BUILD_SCRIPT:/build.sh:ro" \
+  -v "./bin/zip:/usr/bin/zip:ro" \
+  -v "./bin/unzip:/usr/bin/unzip:ro" \
   refringe/spt-build-dotnet:2.1.0 \
   /build.sh \
   "$DATE_TIME" \
