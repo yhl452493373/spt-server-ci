@@ -1,0 +1,27 @@
+#!/bin/bash
+SPT_SERVER_REPOSITORY=sp-tarkov/server-csharp
+SPT_SERVER_BRANCH=develop
+
+SPT_BUILD_TYPE=RELEASE #LOCAL, DEBUG, RELEASE, BLEEDING_EDGE, BLEEDING_EDGE_MODS
+SPT_VERSION=$(git ls-remote --tags "https://github.com/$SPT_SERVER_REPOSITORY.git" | awk -F'/' '{print $NF}' | grep -v '\^{}' | sort -V | tail -1)
+SPT_VERSION=$(echo $SPT_VERSION | cut -d'-' -f1)
+SPT_COMMIT_ID=$(git ls-remote "https://github.com/$SPT_SERVER_REPOSITORY.git" refs/heads/$SPT_SERVER_BRANCH | awk '{print $1}')
+SPT_COMMIT_ID=${SPT_COMMIT_ID:0:8}
+CLIENT_VERSION=$(wget -qO- "https://raw.githubusercontent.com/$SPT_SERVER_REPOSITORY/refs/heads/$SPT_SERVER_BRANCH/Libraries/SPTarkov.Server.Assets/SPT_Data/configs/core.json" | jq -r '.compatibleTarkovVersion')
+DATE_TIME=$(date +%Y%m%d)
+
+echo "SPT服务端构建类型：$SPT_BUILD_TYPE"
+echo "SPT服务端版本：$SPT_VERSION"
+echo "SPT服务端提交ID：$SPT_COMMIT_ID"
+echo "适用客户端版本：$CLIENT_VERSION"
+echo "构建日期：$DATE_TIME"
+
+docker buildx build \
+  --platform linux/amd64 \
+  -t yhl452493373/spt-server:$SPT_VERSION-$DATE_TIME-$SPT_COMMIT_ID \
+  --build-arg SPT_VERSION=$SPT_VERSION \
+  --build-arg SPT_BUILD_TYPE=$SPT_BUILD_TYPE \
+  --build-arg SPT_BUILD_CONFIG=Release \
+  -f Dockerfile .
+
+echo "镜像构建完毕"
