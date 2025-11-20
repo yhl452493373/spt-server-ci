@@ -35,7 +35,7 @@
 
 ## Docker 镜像
 
-[https://hub.docker.com/repository/docker/yhl452493373/spt-server/general](https://hub.docker.com/r/yhl452493373/spt-server)
+[https://hub.docker.com/r/yhl452493373/spt-server](https://hub.docker.com/r/yhl452493373/spt-server)
 
 ```yml
 services:
