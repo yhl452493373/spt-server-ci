@@ -32,3 +32,22 @@
 + macos或linux下需要先安装`docker-desktop`以使用`buildx`插件
 + windows下，先启用`wsl2`环境安装一个linux发行版，然后在`应用商店`下载`docker-desktop`，`docker-desktop`启动后才能执行
   `build-server.sh`，否则会提示`--platform`参数有问题
+
+## Docker 镜像
+
+https://hub.docker.com/repository/docker/yhl452493373/spt-server/general
+
+```yml
+services:
+  spt-server:
+    image: yhl452493373/spt-server:4.0.6-20251119-d13d2dd0
+    container_name: spt-server
+    restart: always
+    volumes:
+      - './data:/opt/spt-server/user'
+    network_mode: host
+    environment:
+      - backendIp=192.168.31.244
+      - backendPort=6969
+
+```
