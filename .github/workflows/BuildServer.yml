@@ -34,6 +34,9 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4
 
+      - name: 设置 Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: 检查 Docker Hub 配置
         id: docker-config
         run: |
@@ -116,13 +119,13 @@ jobs:
           echo "运行器操作系统: ${{ inputs.runner_os }}"
           echo "镜像标签: ${{ steps.exist-tag.outputs.tag }}"
           echo "用户选择推送到 Docker Hub: ${{ inputs.push_to_docker }}"
-          echo "实际是否推送到 Docker Hub: ${{ steps.check-docker-config.outputs.push_available }}"
+          echo "实际是否推送到 Docker Hub: ${{ steps.docker-config.outputs.push_available }}"
           if [ "${{ inputs.output_path }}" != "" ]; then
             echo "镜像文件保存到: ${{ inputs.output_path }}/${{ env.IMAGE_FILE }}"
           else
             echo "未提供输出路径，镜像文件未保存"
           fi
-          if [ "${{ steps.check-docker-config.outputs.push_available }}" = "true" ]; then
+          if [ "${{ steps.docker-config.outputs.push_available }}" = "true" ]; then
             echo "已推送到 Docker Hub"
             echo "推送的标签: ${{ steps.exist-tag.outputs.tag }}"
           else

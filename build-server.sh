@@ -23,7 +23,7 @@ echo "开始构建镜像"
 # 先删除可能存在的旧标签文件
 rm -rf image_tag.txt
 
-docker build \
+docker buildx build \
   -t $IMAGE_TAG \
   --build-arg SPT_VERSION=$SPT_VERSION \
   --build-arg SPT_BUILD_TYPE=$SPT_BUILD_TYPE \
