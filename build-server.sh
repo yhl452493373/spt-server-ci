@@ -24,6 +24,7 @@ echo "开始构建镜像"
 rm -rf image_tag.txt
 
 docker buildx build \
+  --platform linux/amd64 \
   -t $IMAGE_TAG \
   --build-arg SPT_VERSION=$SPT_VERSION \
   --build-arg SPT_BUILD_TYPE=$SPT_BUILD_TYPE \
