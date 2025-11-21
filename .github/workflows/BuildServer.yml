@@ -136,3 +136,39 @@ jobs:
               echo "镜像仅本地构建，用户选择不推送到 Docker Hub"
             fi
           fi
+
+      - name: 清理 Docker 镜像和缓存
+        run: |
+          echo "=== 开始清理 Docker 资源 ==="
+          
+          # 1. 删除构建的镜像
+          IMAGE_TAG="${{ steps.exist-tag.outputs.tag }}"
+          if [ -n "$IMAGE_TAG" ]; then
+            echo "删除构建的镜像: $IMAGE_TAG"
+            docker rmi $IMAGE_TAG 2>/dev/null || echo "镜像已删除或不存在"
+          else
+            echo "未获取到镜像标签，跳过镜像删除"
+          fi
+          
+          # 2. 清理所有悬空镜像
+          echo "清理悬空镜像..."
+          DANGLING_IMAGES=$(docker images -f "dangling=true" -q)
+          if [ -n "$DANGLING_IMAGES" ]; then
+            docker rmi $DANGLING_IMAGES 2>/dev/null || true
+            echo "已清理悬空镜像"
+          else
+            echo "无悬空镜像需要清理"
+          fi
+          
+          # 3. 在磁盘空间不足时清理构建缓存
+          echo "检查磁盘使用情况..."
+          DISK_USAGE=$(df / | awk 'NR==2 {print $5}' | sed 's/%//')
+          if [ "$DISK_USAGE" -gt 90 ]; then
+            echo "磁盘使用率 ${DISK_USAGE}%，清理构建缓存"
+            docker buildx prune -f
+            echo "构建缓存已清理"
+          else
+            echo "磁盘使用率 ${DISK_USAGE}%，保留构建缓存"
+          fi
+          
+          echo "资源清理完成"
