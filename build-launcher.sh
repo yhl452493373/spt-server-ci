@@ -418,6 +418,30 @@ DOCKER_CMD="$DOCKER_CMD \"$SPT_BUILD_BRANCH\""
 echo "执行命令: $DOCKER_CMD"
 eval $DOCKER_CMD
 
+# 最终脚本示例
+#docker run --rm \
+#  -v "$(pwd)/$OUTPUT_DIR:/output" \
+#  -v "$(realpath $MANAGED_ZIP_FILE):/Managed.zip:ro" \
+#  -v "$BUILD_SCRIPT:/build.sh:ro" \
+#  -v "./bin/zip:/usr/bin/zip:ro" \
+#  -v "./bin/unzip:/usr/bin/unzip:ro" \
+#  refringe/spt-build-dotnet:2.1.0 \
+#  /build.sh \
+#  "$DATE_TIME" \
+#  "$SPT_VERSION" \
+#  "$CLIENT_VERSION" \
+#  "$MODULES_COMMIT_ID" \
+#  "$LAUNCHER_COMMIT_ID" \
+#  "$BUILD_MODULES" \
+#  "$BUILD_LAUNCHER" \
+#  "$COMPRESS" \
+#  "$ARCHIVE_NAME" \
+#  "/Managed.zip" \
+#  "$SPT_MODULES_BRANCH" \
+#  "$SPT_LAUNCHER_BRANCH" \
+#  "$SPT_BUILD_BRANCH"
+
+
 # 清理临时脚本
 rm -f "$BUILD_SCRIPT"
 echo "临时构建脚本已清理"
