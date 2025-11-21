@@ -8,7 +8,7 @@ on:
           选择运行器操作系统：
           - ubuntu-latest: 最新的 Ubuntu
           - ubuntu-24.04: Ubuntu 24.04 LTS
-          - ubuntu-host: 自建运行器所在宿主机
+          - ubuntu-host: 自建的运行器所在宿主机
         type: choice
         required: true
         default: 'ubuntu-latest'
@@ -50,7 +50,7 @@ jobs:
               echo "push_available=true" >> $GITHUB_OUTPUT
             fi
           else
-            echo "用户选择不推送镜像"
+            echo "用户选择不推送到 Docker Hub"
             echo "push_available=false" >> $GITHUB_OUTPUT
           fi
 
@@ -119,7 +119,7 @@ jobs:
           echo "=== 构建结果 ==="
           echo "运行器操作系统: ${{ inputs.runner_os }}"
           echo "镜像标签: ${{ steps.exist-tag.outputs.tag }}"
-          echo "选择是否推送到 Docker Hub: ${{ inputs.push_to_docker }}"
+          echo "用户选择推送到 Docker Hub: ${{ inputs.push_to_docker }}"
           echo "实际是否推送到 Docker Hub: ${{ steps.check-docker-config.outputs.push_available }}"
           if [ "${{ inputs.output_path }}" != "" ]; then
             echo "镜像文件保存到: ${{ inputs.output_path }}/${{ env.IMAGE_FILE }}"
