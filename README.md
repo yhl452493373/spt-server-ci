@@ -3,7 +3,7 @@
 + [build-launcher.sh](build-launcher.sh) 用于在非docker环境中调用docker镜像构建启动器
 + [build.sh](build.sh) 是 [build-launcher.sh](build-launcher.sh)
   和 [BuildLauncher.yml](.github/workflows/BuildLauncher.yml) 中调用的脚本
-+ [build-server.sh](build-server.sh) 用于构建服务端镜像，也是 [BuildServer.yml](.github/workflows/BuildServer.yml) 中调用的脚本
++ [build-server.sh](build-server.sh) 用于构建服务端镜像，也是 [BuildServer.yml](.github/workflows/BuildServer.yml) 中调用的脚本，需要把里面的`yhl452493373`换成你自己的`Docker Hub`的用户名
 + [bin](bin)目录下的[zip](bin/zip)和[unzip](bin/unzip)是ubuntu中使用的zip压缩和解压缩软件的二进制文件
 
 ## [build-launcher.sh](build-launcher.sh) 参数说明
