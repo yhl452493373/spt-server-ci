@@ -37,7 +37,7 @@ jobs:
         run: |
           # 安装必要工具
           apt update -y
-          apt install zip unzip wget jq nodejs -y
+          apt install zip unzip wget jq nodejs bash -y
 
       - name: 克隆代码
         uses: actions/checkout@v4
