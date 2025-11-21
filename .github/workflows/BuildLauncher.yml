@@ -230,7 +230,7 @@ jobs:
           echo "ZIP_FILE_NAME: $ZIP_FILE_NAME"
 
       - name: 上传
-        uses: https://github.com/christopherHX/gitea-upload-artifact@v4
+        uses: christopherHX/gitea-upload-artifact@v4
         with:
           name: ${{ steps.file_info.outputs.zip_file_name }}
           path: ${{ steps.file_info.outputs.zip_file_path }}
