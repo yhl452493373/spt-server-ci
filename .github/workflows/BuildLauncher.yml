@@ -29,8 +29,7 @@ env:
 
 jobs:
   build-spt:
-    runs-on: ubuntu-latest
-    container: refringe/spt-build-dotnet:2.1.0
+    runs-on: spt-build-dotnet
 
     steps:
       - name: 克隆代码
