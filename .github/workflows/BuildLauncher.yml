@@ -1,6 +1,6 @@
 name: 构建启动器
 on:
-  workflow_dispatch: # 允许手动触发
+  workflow_dispatch:
     inputs:
       build_modules:
         description: '构建 Modules'
@@ -42,7 +42,7 @@ jobs:
           apt update -y
           apt install zip unzip nodejs -y
 
-      - name: 克隆代码
+      - name: 检出代码
         uses: actions/checkout@v4
 
       - name: 配置环境
@@ -60,9 +60,9 @@ jobs:
 
       - name: 获取 Managed.zip
         id: managed
-        if: ${{ github.event.inputs.build_modules == 'true' }}
+        if: inputs.build_modules == true
         run: |
-          MANAGED_URL="${{ github.event.inputs.managed_zip_url }}"
+          MANAGED_URL="${{ inputs.managed_zip_url }}"
           
           if [ -z "$MANAGED_URL" ]; then
             echo "错误：未提供 Managed.zip 路径或URL"
@@ -138,11 +138,11 @@ jobs:
         id: params
         run: |
           # 是否构建modules
-          BUILD_MODULES="${{ github.event.inputs.build_modules || 'true' }}"
+          BUILD_MODULES="${{ inputs.build_modules || 'true' }}"
           echo "build_modules=$BUILD_MODULES" >> $GITHUB_OUTPUT
           
           # 是否构建启动器
-          BUILD_LAUNCHER="${{ github.event.inputs.build_launcher || 'true' }}"
+          BUILD_LAUNCHER="${{ inputs.build_launcher || 'true' }}"
           echo "build_launcher=$BUILD_LAUNCHER" >> $GITHUB_OUTPUT
           
           # 构建后是否压缩为zip

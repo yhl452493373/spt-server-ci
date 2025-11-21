@@ -1,0 +1,138 @@
+name: 构建服务端镜像
+
+on:
+  workflow_dispatch:
+    inputs:
+      runner_os:
+        description: |
+          选择运行器操作系统：
+          - ubuntu-latest: 最新的 Ubuntu
+          - ubuntu-24.04: Ubuntu 24.04 LTS
+          - ubuntu-host: 自建运行器所在宿主机
+        type: choice
+        required: true
+        default: 'ubuntu-latest'
+        options:
+          - ubuntu-latest
+          - ubuntu-24.04
+          - ubuntu-host
+      push_to_docker:
+        description: 是否推送到 Docker Hub
+        type: boolean
+        default: true
+        required: true
+      output_path:
+        description: 镜像输出路径
+        type: string
+        required: false
+
+env:
+  IMAGE_TAG_FILE: image_tag.txt
+  IMAGE_FILE: spt-server-image.tar
+
+jobs:
+  build-server:
+    runs-on:  ${{ inputs.runner_os }}
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 检查 Docker Hub 配置
+        id: docker-config
+        run: |
+          if [ "${{ inputs.push_to_docker }}" = "true" ]; then
+            if [ -z "${{ secrets.DOCKERHUB_USERNAME }}" ] || [ -z "${{ secrets.DOCKERHUB_TOKEN }}" ]; then
+              echo "Docker Hub 用户名或令牌未配置，无法推送镜像"
+              echo "push_available=false" >> $GITHUB_OUTPUT
+            else
+              echo "Docker Hub 配置检查通过"
+              echo "push_available=true" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "用户选择不推送镜像"
+            echo "push_available=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 登录 Docker Hub
+        if: steps.docker-config.outputs.push_available == 'true'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: 设置构建脚本执行权限
+        run: chmod +x build-server.sh
+
+      - name: 安装依赖
+        run: |
+          sudo apt update
+          sudo apt install -y jq
+
+      - name: 构建 Docker 镜像
+        run: |
+          # 运行构建脚本
+          ./build-server.sh
+
+      - name: 获取镜像标签
+        id: exist-tag
+        run: |
+          # 从文件中读取镜像标签
+          if [ -f ${{ env.IMAGE_TAG_FILE }} ]; then
+            TAG=$(cat ${{ env.IMAGE_TAG_FILE }} | head -1)
+            echo "从文件读取镜像标签: $TAG"
+            echo "tag=$TAG" >> $GITHUB_OUTPUT
+          else
+            echo "错误：${{ env.IMAGE_TAG_FILE }} 文件不存在，构建可能失败"
+            exit 1
+          fi
+
+      - name: 导出构建镜像
+        if: inputs.output_path != ''
+        run: |
+          # 临时导出镜像
+          docker save -o ${{ env.IMAGE_FILE }} ${{ steps.exist-tag.outputs.tag }}
+          echo "镜像已临时导出为: ${{ env.IMAGE_FILE }}"
+
+      - name: 复制镜像到输出目录
+        if: inputs.output_path != ''
+        run: |
+          # 创建输出目录并复制镜像
+          mkdir -p ${{ inputs.output_path }}
+          cp ${{ env.IMAGE_FILE }} ${{ inputs.output_path }}/
+          echo "镜像已复制到: ${{ inputs.output_path }}/${{ env.IMAGE_FILE }}"
+
+      - name: 清理临时文件
+        if: inputs.output_path != ''
+        run: |
+          # 删除临时文件
+          rm -f ${{ env.IMAGE_FILE }}
+          echo "已清理临时镜像文件"
+
+      - name: 推送 Docker 镜像
+        if: steps.docker-config.outputs.push_available == 'true'
+        run: |
+          docker push ${{ steps.exist-tag.outputs.tag }}
+
+      - name: 构建结果
+        run: |
+          echo "=== 构建结果 ==="
+          echo "运行器操作系统: ${{ inputs.runner_os }}"
+          echo "镜像标签: ${{ steps.exist-tag.outputs.tag }}"
+          echo "选择是否推送到 Docker Hub: ${{ inputs.push_to_docker }}"
+          echo "实际是否推送到 Docker Hub: ${{ steps.check-docker-config.outputs.push_available }}"
+          if [ "${{ inputs.output_path }}" != "" ]; then
+            echo "镜像文件保存到: ${{ inputs.output_path }}/${{ env.IMAGE_FILE }}"
+          else
+            echo "未提供输出路径，镜像文件未保存"
+          fi
+          if [ "${{ steps.check-docker-config.outputs.push_available }}" = "true" ]; then
+            echo "已推送到 Docker Hub"
+            echo "推送的标签: ${{ steps.exist-tag.outputs.tag }}"
+          else
+            if [ "${{ inputs.push_to_docker }}" = "true" ]; then
+              echo "推送失败：Docker Hub 用户名或令牌未配置"
+            else
+              echo "镜像仅本地构建，用户选择不推送到 Docker Hub"
+            fi
+          fi
