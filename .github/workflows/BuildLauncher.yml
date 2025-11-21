@@ -215,10 +215,10 @@ jobs:
             echo "错误：输出目录 ${{ env.BUILD_SCRIPT_OUTPUT_DIR }} 不存在"
             exit 1
           fi
-          ZIP_FILE=$(ls "${{ env.BUILD_SCRIPT_OUTPUT_DIR }}"/*.zip 2>/dev/null | head -1)
+          ZIP_FILE=$(ls ${{ env.BUILD_SCRIPT_OUTPUT_DIR }}/*.zip 2>/dev/null | head -1)
           if [ -z "$ZIP_FILE" ]; then
             echo "错误：在 ${{ env.BUILD_SCRIPT_OUTPUT_DIR }} 中未找到 zip 文件"
-            ls -la "${{ env.BUILD_SCRIPT_OUTPUT_DIR }}" || echo "目录内容无法列出"
+            ls -la ${{ env.BUILD_SCRIPT_OUTPUT_DIR }} || echo "目录内容无法列出"
             exit 1
           fi
           echo "zip_file=$ZIP_FILE" >> $GITHUB_OUTPUT
