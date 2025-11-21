@@ -377,29 +377,46 @@ chmod +x "$BUILD_SCRIPT"
 
 echo "临时构建脚本已创建: $BUILD_SCRIPT"
 
-# 单次 Docker 运行执行所有操作
-echo "启动构建容器..."
-docker run --rm \
-  -v "$(pwd)/$OUTPUT_DIR:/output" \
-  -v "$(realpath $MANAGED_ZIP_FILE):/Managed.zip:ro" \
-  -v "$BUILD_SCRIPT:/build.sh:ro" \
-  -v "./bin/zip:/usr/bin/zip:ro" \
-  -v "./bin/unzip:/usr/bin/unzip:ro" \
-  refringe/spt-build-dotnet:2.1.0 \
-  /build.sh \
-  "$DATE_TIME" \
-  "$SPT_VERSION" \
-  "$CLIENT_VERSION" \
-  "$MODULES_COMMIT_ID" \
-  "$LAUNCHER_COMMIT_ID" \
-  "$BUILD_MODULES" \
-  "$BUILD_LAUNCHER" \
-  "$COMPRESS" \
-  "$ARCHIVE_NAME" \
-  "/Managed.zip" \
-  "$SPT_MODULES_BRANCH" \
-  "$SPT_LAUNCHER_BRANCH" \
-  "$SPT_BUILD_BRANCH"
+# 构建 Docker 命令
+DOCKER_CMD="docker run --rm"
+
+# 添加必要的卷挂载
+DOCKER_CMD="$DOCKER_CMD -v \"$(pwd)/$OUTPUT_DIR:/output\""
+DOCKER_CMD="$DOCKER_CMD -v \"$BUILD_SCRIPT:/build.sh:ro\""
+DOCKER_CMD="$DOCKER_CMD -v \"./bin/zip:/usr/bin/zip:ro\""
+DOCKER_CMD="$DOCKER_CMD -v \"./bin/unzip:/usr/bin/unzip:ro\""
+
+# 只有编译 modules 时才挂载 Managed.zip
+if [ "$BUILD_MODULES" = true ] && [ -n "$MANAGED_ZIP_FILE" ] && [ -f "$MANAGED_ZIP_FILE" ]; then
+  MANAGED_ZIP_PATH=$(realpath "$MANAGED_ZIP_FILE")
+  DOCKER_CMD="$DOCKER_CMD -v \"$MANAGED_ZIP_PATH:/Managed.zip:ro\""
+  # 传递实际的文件路径给构建脚本
+  MANAGED_ZIP_ARG="/Managed.zip"
+else
+  # 如果不编译 modules，传递空字符串
+  MANAGED_ZIP_ARG=""
+fi
+
+# 添加容器镜像和构建脚本
+DOCKER_CMD="$DOCKER_CMD refringe/spt-build-dotnet:2.1.0"
+DOCKER_CMD="$DOCKER_CMD /build.sh"
+DOCKER_CMD="$DOCKER_CMD \"$DATE_TIME\""
+DOCKER_CMD="$DOCKER_CMD \"$SPT_VERSION\""
+DOCKER_CMD="$DOCKER_CMD \"$CLIENT_VERSION\""
+DOCKER_CMD="$DOCKER_CMD \"$MODULES_COMMIT_ID\""
+DOCKER_CMD="$DOCKER_CMD \"$LAUNCHER_COMMIT_ID\""
+DOCKER_CMD="$DOCKER_CMD \"$BUILD_MODULES\""
+DOCKER_CMD="$DOCKER_CMD \"$BUILD_LAUNCHER\""
+DOCKER_CMD="$DOCKER_CMD \"$COMPRESS\""
+DOCKER_CMD="$DOCKER_CMD \"$ARCHIVE_NAME\""
+DOCKER_CMD="$DOCKER_CMD \"$MANAGED_ZIP_ARG\""
+DOCKER_CMD="$DOCKER_CMD \"$SPT_MODULES_BRANCH\""
+DOCKER_CMD="$DOCKER_CMD \"$SPT_LAUNCHER_BRANCH\""
+DOCKER_CMD="$DOCKER_CMD \"$SPT_BUILD_BRANCH\""
+
+# 执行 Docker 命令
+echo "执行命令: $DOCKER_CMD"
+eval $DOCKER_CMD
 
 # 清理临时脚本
 rm -f "$BUILD_SCRIPT"
