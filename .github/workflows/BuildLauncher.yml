@@ -90,7 +90,7 @@ jobs:
           else
             # 如果是URL，则下载
             echo "检测到URL，开始下载..."
-            wget -O ${{ env.MANAGED_ZIP_FILE }} "$MANAGED_URL"
+            curl -L -o ${{ env.MANAGED_ZIP_FILE }} "$MANAGED_URL"
           
             # 验证下载是否成功
             if [ ! -f "${{ env.MANAGED_ZIP_FILE }}" ]; then
@@ -122,7 +122,7 @@ jobs:
           echo "SPT Version: $SPT_VERSION"
           
           # 获取客户端版本
-          CLIENT_VERSION=$(wget -qO- "https://raw.githubusercontent.com/sp-tarkov/server-csharp/develop/Libraries/SPTarkov.Server.Assets/SPT_Data/configs/core.json" | jq -r '.compatibleTarkovVersion')
+          CLIENT_VERSION=$(curl -s "https://raw.githubusercontent.com/sp-tarkov/server-csharp/develop/Libraries/SPTarkov.Server.Assets/SPT_Data/configs/core.json" | grep -o '"compatibleTarkovVersion":[[:space:]]*"[^"]*"' | sed -E 's/.*: *"([^"]*)".*/\1/')
           echo "client_version=$CLIENT_VERSION" >> $GITHUB_OUTPUT
           echo "Client Version: $CLIENT_VERSION"
           
