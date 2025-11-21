@@ -61,7 +61,6 @@ jobs:
         run: |
           MANAGED_URL="${{ github.event.inputs.managed_zip_url }}"
           
-          # 检查输入是否为空
           if [ -z "$MANAGED_URL" ]; then
             echo "错误：未提供 Managed.zip 路径或URL"
             exit 1
@@ -69,11 +68,19 @@ jobs:
           
           echo "输入的 Managed.zip 路径: $MANAGED_URL"
           
-          # 检查是否是本地文件路径（以 /、./、../ 开头，或者是文件名）
-          if [[ "$MANAGED_URL" =~ ^/.* ]] || [[ "$MANAGED_URL" =~ ^\./.* ]] || [[ "$MANAGED_URL" =~ ^\.\./.* ]] || [[ ! "$MANAGED_URL" =~ ^https?:// ]]; then
+          # 如果是http或https开头就是URL，否则就是本地文件
+          if [[ "$MANAGED_URL" =~ ^https?:// ]]; then
+            echo "检测到URL，开始下载..."
+            curl -L -o ${{ env.MANAGED_ZIP_FILE }} "$MANAGED_URL"
+          
+            if [ ! -f "${{ env.MANAGED_ZIP_FILE }}" ]; then
+              echo "错误：Managed.zip 下载失败"
+              exit 1
+            fi
+            echo "Managed.zip 下载成功"
+          else
             echo "检测到本地文件路径"
           
-            # 检查文件是否存在
             if [ ! -f "$MANAGED_URL" ]; then
               echo "错误：本地文件 $MANAGED_URL 不存在"
               echo "当前目录文件列表:"
@@ -82,21 +89,8 @@ jobs:
             fi
           
             echo "找到本地文件: $(ls -la "$MANAGED_URL")"
-          
-            # 复制本地文件到工作目录
             cp "$MANAGED_URL" ${{ env.MANAGED_ZIP_FILE }}
             echo "本地文件复制成功"
-          else
-            # 如果是URL，则下载
-            echo "检测到URL，开始下载..."
-            curl -L -o ${{ env.MANAGED_ZIP_FILE }} "$MANAGED_URL"
-          
-            # 验证下载是否成功
-            if [ ! -f "${{ env.MANAGED_ZIP_FILE }}" ]; then
-              echo "错误：Managed.zip 下载失败"
-              exit 1
-            fi
-            echo "Managed.zip 下载成功"
           fi
           
           # 复制到构建目录
