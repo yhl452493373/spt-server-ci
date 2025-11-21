@@ -11,4 +11,4 @@ jobs:
         run: |
           chmod a+x ./bin/*
           chmod a+x build-launcher.sh
-          ./build-launcher.sh
+          ./build-launcher.sh -l -c
