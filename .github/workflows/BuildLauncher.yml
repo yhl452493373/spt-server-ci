@@ -216,20 +216,21 @@ jobs:
           fi
           cd ${{ env.BUILD_SCRIPT_OUTPUT_DIR }}
           ZIP_FILE_NAME=$(ls *.zip 2>/dev/null | head -1)
+          ZIP_FILE_PATH="${{ env.BUILD_SCRIPT_OUTPUT_DIR }}/$ZIP_FILE_NAME"
           if [ -z "$ZIP_FILE_NAME" ]; then
             echo "错误：在 ${{ env.BUILD_SCRIPT_OUTPUT_DIR }} 中未找到 zip 文件"
             ls -la "${{ env.BUILD_SCRIPT_OUTPUT_DIR }}" || echo "目录内容无法列出"
             exit 1
           fi
           
-          echo "zip_file=$ZIP_FILE" >> $GITHUB_OUTPUT
-          echo "ZIP_FILE: $ZIP_FILE"
+          echo "zip_file_path=$ZIP_FILE_PATH" >> $GITHUB_OUTPUT
+          echo "ZIP_FILE_PATH: $ZIP_FILE_PATH"
           
-          echo "artifact_name=$ZIP_FILE_NAME" >> $GITHUB_OUTPUT
+          echo "zip_file_name=$ZIP_FILE_NAME" >> $GITHUB_OUTPUT
           echo "ZIP_FILE_NAME: $ZIP_FILE_NAME"
 
       - name: 上传
         uses: https://github.com/christopherHX/gitea-upload-artifact@v4
         with:
-          name: ${{ steps.file_info.outputs.artifact_name }}
-          path: ${{ steps.file_info.outputs.zip_file }}
+          name: ${{ steps.file_info.outputs.zip_file_name }}
+          path: ${{ steps.file_info.outputs.zip_file_path }}
