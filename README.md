@@ -1,6 +1,8 @@
 # SPT（塔科夫单机版） 构建脚本
 
-+ [build-launcher.sh](build-launcher.sh) 用于构建启动器
++ [build-launcher.sh](build-launcher.sh) 用于在非docker环境中调用docker镜像构建启动器
++ [build.sh](build.sh) 是 [build-launcher.sh](build-launcher.sh)
+  和 [BuildLauncher.yml](.github/workflows/BuildLauncher.yml) 中调用的脚本
 + [build-server.sh](build-server.sh) 用于构建服务端镜像
 + [bin](bin)目录下的[zip](bin/zip)和[unzip](bin/unzip)是ubuntu中使用的zip压缩和解压缩软件的二进制文件
 
@@ -18,9 +20,9 @@
 
 示例:
 
-+ ./build-launcher.sh -z ./Managed.zip -a -c # 编译全部并压缩，-z必须是第一个参数
-+ ./ -z ./Managed.zip -m -c # 只编译 modules 并压缩，-z必须是第一个参数
-+ ./ -l -c # 只编译 launcher 并压缩，不需要-z
++ ./build-launcher.sh -z ./Managed.zip -a -c # 编译全部并压缩，-z 必须是第一个参数
++ ./build-launcher.sh -z ./Managed.zip -m -c # 只编译 modules 并压缩，-z 必须是第一个参数
++ ./build-launcher.sh -l -c # 只编译 launcher 并压缩，不需要 -z 
 
 *`Managed.zip`为塔科夫目录下的`EscapeFromTarkov_Data/Managed`的zip压缩文件*
 
