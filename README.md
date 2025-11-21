@@ -3,7 +3,7 @@
 + [build-launcher.sh](build-launcher.sh) 用于在非docker环境中调用docker镜像构建启动器
 + [build.sh](build.sh) 是 [build-launcher.sh](build-launcher.sh)
   和 [BuildLauncher.yml](.github/workflows/BuildLauncher.yml) 中调用的脚本
-+ [build-server.sh](build-server.sh) 用于构建服务端镜像
++ [build-server.sh](build-server.sh) 用于构建服务端镜像，也是 [BuildServer.yml](.github/workflows/BuildServer.yml) 中调用的脚本
 + [bin](bin)目录下的[zip](bin/zip)和[unzip](bin/unzip)是ubuntu中使用的zip压缩和解压缩软件的二进制文件
 
 ## [build-launcher.sh](build-launcher.sh) 参数说明
@@ -53,3 +53,15 @@ services:
       - backendPort=6969
 
 ```
+
+## [BuildServer.yml](.github/workflows/BuildServer.yml) 工作流选项说明
+
++ 选择运行器系统
+  - `ubuntu-latest`最新的 Ubuntu
+  - `ubuntu-24.04`Ubuntu-24.04 LTS
+  - `ubuntu-host`自建的运行器，如果你没自建运行器，不要选这个
++ 推送到 Docker Hub
+  - 如果选中，则会尝试推送到 Docker Hub
+  - 选中后，需要在项目的工作流中设置两个密钥`DOCKERHUB_USERNAME`和`DOCKERHUB_TOKEN`
+    - `gitea`在 [这里](settings/actions/secrets)
+    - `github`在 [这里](settings/secrets/actions)
