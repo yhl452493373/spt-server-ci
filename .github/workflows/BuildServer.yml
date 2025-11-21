@@ -4,11 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       runner_os:
-        description: |
-          选择运行器操作系统：
-          - ubuntu-latest: 最新的 Ubuntu
-          - ubuntu-24.04: Ubuntu 24.04 LTS
-          - ubuntu-host: 自建的运行器所在宿主机
+        description: 选择运行器系统
         type: choice
         required: true
         default: 'ubuntu-latest'
@@ -19,7 +15,7 @@ on:
       push_to_docker:
         description: 是否推送到 Docker Hub
         type: boolean
-        default: true
+        default: false
         required: true
       output_path:
         description: 镜像输出路径
