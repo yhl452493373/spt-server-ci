@@ -63,7 +63,7 @@ services:
 + 推送到 Docker Hub
   - 如果选中，则会尝试推送到 Docker Hub
   - 选中后，需要在项目的工作流中设置两个密钥`DOCKERHUB_USERNAME`和`DOCKERHUB_TOKEN`
-    - `gitea`在 [这里](/settings/actions/secrets)
+    - `gitea`在 [这里](../../../settings/actions/secrets)
     - `github`在 [这里](/settings/secrets/actions)
 + 镜像输出路径
   - 如果提供了这个路径，服务端镜像构建完成后，会复制到这里
