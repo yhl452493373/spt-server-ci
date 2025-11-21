@@ -33,7 +33,10 @@ jobs:
 
     steps:
       - name: 克隆代码
-        uses: actions/checkout@v4
+        run: |
+          # 直接克隆当前仓库
+          git clone --depth 1 https://gitea.yanghuanglin.cn/${{ github.repository }} .
+          git checkout ${{ github.ref }}
 
       - name: 配置环境
         run: |
