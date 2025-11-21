@@ -7,8 +7,14 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v4
+
       - name: build launcher
         run: |
           chmod a+x ./bin/*
           chmod a+x build-launcher.sh
           ./build-launcher.sh -l -c
+
+      - name: upload
+        uses: actions/upload-artifact@v4
+        with:
+          path: build-output/*.zip
