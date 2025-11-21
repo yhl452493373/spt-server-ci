@@ -195,6 +195,7 @@ jobs:
       - name: 构建编译
         run: |         
           # 执行构建脚本
+          echo "开始构建"
           ${{ env.BUILD_SCRIPT_DIR }}/build.sh \
           "${{ steps.versions.outputs.date_time }}" \
           "${{ steps.versions.outputs.spt_version }}" \
@@ -211,23 +212,28 @@ jobs:
           "${{ steps.params.outputs.build_branch }}"
 
       - name: 获取上传文件名称
-        id: filename
+        id: file_info
         run: |
           if [ ! -d "${{ env.BUILD_SCRIPT_OUTPUT_DIR }}" ]; then
             echo "错误：输出目录 ${{ env.BUILD_SCRIPT_OUTPUT_DIR }} 不存在"
             exit 1
           fi
-          ZIP_FILE=$(ls ${{ env.BUILD_SCRIPT_OUTPUT_DIR }}/*.zip)
-          if [ -z "$ZIP_FILE" ]; then
+          cd ${{ env.BUILD_SCRIPT_OUTPUT_DIR }}
+          ZIP_FILE_NAME=$(ls *.zip 2>/dev/null | head -1)
+          if [ -z "$ZIP_FILE_NAME" ]; then
             echo "错误：在 ${{ env.BUILD_SCRIPT_OUTPUT_DIR }} 中未找到 zip 文件"
-            ls -la ${{ env.BUILD_SCRIPT_OUTPUT_DIR }} || echo "目录内容无法列出"
+            ls -la "${{ env.BUILD_SCRIPT_OUTPUT_DIR }}" || echo "目录内容无法列出"
             exit 1
           fi
+          
           echo "zip_file=$ZIP_FILE" >> $GITHUB_OUTPUT
-          echo "artifact_name=$(basename $ZIP_FILE)" >> $GITHUB_OUTPUT
+          echo "ZIP_FILE: $ZIP_FILE"
+          
+          echo "artifact_name=$ZIP_FILE_NAME" >> $GITHUB_OUTPUT
+          echo "ZIP_FILE_NAME: $ZIP_FILE_NAME"
 
       - name: 上传
         uses: https://github.com/christopherHX/gitea-upload-artifact@v4
         with:
-          name: ${{ steps.filename.outputs.artifact_name }}
-          path: ${{ steps.filename.outputs.zip_file }}
+          name: ${{ steps.file_info.outputs.artifact_name }}
+          path: ${{ steps.file_info.outputs.zip_file }}
