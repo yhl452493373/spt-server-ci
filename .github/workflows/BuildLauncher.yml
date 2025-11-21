@@ -1,31 +1,229 @@
 name: 构建启动器
-on: workflow_dispatch
+on:
+  workflow_dispatch: # 允许手动触发
+    inputs:
+      build_modules:
+        description: '构建 Modules'
+        required: true
+        default: true
+        type: boolean
+      build_launcher:
+        description: '构建 Launcher'
+        required: true
+        default: true
+        type: boolean
+      managed_zip_url:
+        description: 'Managed.zip 文件路径'
+        required: false
+        default: ''
+        type: string
+
+env:
+  MODULES_BRANCH: master
+  LAUNCHER_BRANCH: master
+  BUILD_BRANCH: main
+  COMPRESS: true
+  BUILD_SCRIPT_DIR: /tmp/build
+  BUILD_SCRIPT_OUTPUT_DIR: ${{ env.BUILD_SCRIPT_DIR }}/output
+  MANAGED_ZIP_FILE: Managed.zip
 
 jobs:
-  build-launcher:
-    runs-on: ubuntu-24.04
+  build-spt:
+    runs-on: ubuntu-latest
+    container: refringe/spt-build-dotnet:2.1.0
+
     steps:
-      - id: checkout
-        name: checkout
+      - name: 克隆代码
         uses: actions/checkout@v4
 
-      - id: build
-        name: build launcher
+      - name: 配置环境
         run: |
-          chmod a+x ./bin/*
-          chmod a+x build-launcher.sh
-          ./build-launcher.sh -l -c
+          # 安装必要工具
+          echo "安装zip和unzip"
+          chmod a+x bin/*
+          cp bin/* /usr/bin/
+          
+          # 创建脚本目录和输出目录
+          echo "创建脚本目录${{ env.BUILD_SCRIPT_DIR }}和输出目录${{ env.BUILD_SCRIPT_OUTPUT_DIR }}"
+          mkdir -p ${{ env.BUILD_SCRIPT_DIR }}
+          mkdir -p ${{ env.BUILD_SCRIPT_OUTPUT_DIR }}
 
-      - id: get-filename
-        name: get zip filename
+          # 构建脚本允许执行
+          echo "执行脚本赋权，并复制到${{ env.BUILD_SCRIPT_DIR }}"
+          chmod a+x build.sh
+          # 复制构建脚本
+          cp build.sh ${{ env.BUILD_SCRIPT_DIR }}
+
+      - name: 获取Managed.zip
+        id: managed
+        if: ${{ github.event.inputs.build_modules == 'true' }}
         run: |
-          ZIP_FILE=$(ls build-output/*.zip)
+          MANAGED_URL="${{ github.event.inputs.managed_zip_url }}"
+          
+          # 检查输入是否为空
+          if [ -z "$MANAGED_URL" ]; then
+            echo "错误：未提供 Managed.zip 路径或URL"
+            exit 1
+          fi
+          
+          echo "输入的 Managed.zip 路径: $MANAGED_URL"
+          
+          # 检查是否是本地文件路径（以 /、./、../ 开头，或者是文件名）
+          if [[ "$MANAGED_URL" =~ ^/.* ]] || [[ "$MANAGED_URL" =~ ^\./.* ]] || [[ "$MANAGED_URL" =~ ^\.\./.* ]] || [[ ! "$MANAGED_URL" =~ ^https?:// ]]; then
+            echo "检测到本地文件路径"
+          
+            # 检查文件是否存在
+            if [ ! -f "$MANAGED_URL" ]; then
+              echo "错误：本地文件 $MANAGED_URL 不存在"
+              echo "当前目录文件列表:"
+              ls -la
+              exit 1
+            fi
+          
+            echo "找到本地文件: $(ls -la "$MANAGED_URL")"
+          
+            # 复制本地文件到工作目录
+            cp "$MANAGED_URL" ${{ env.MANAGED_ZIP_FILE }}
+            echo "本地文件复制成功"
+          else
+            # 如果是URL，则下载
+            echo "检测到URL，开始下载..."
+            wget -O ${{ env.MANAGED_ZIP_FILE }} "$MANAGED_URL"
+          
+            # 验证下载是否成功
+            if [ ! -f "${{ env.MANAGED_ZIP_FILE }}" ]; then
+              echo "错误：Managed.zip 下载失败"
+              exit 1
+            fi
+            echo "Managed.zip 下载成功"
+          fi
+          
+          # 复制到构建目录
+          echo "复制文件到构建目录..."
+          cp ${{ env.MANAGED_ZIP_FILE }} ${{ env.BUILD_SCRIPT_DIR }}
+          
+          FINAL_PATH="${{ env.BUILD_SCRIPT_DIR }}/${{ env.MANAGED_ZIP_FILE }}"
+          echo "文件准备完成，最终路径: $FINAL_PATH"
+          echo "final_path=$FINAL_PATH" >> $GITHUB_OUTPUT
+
+      - name: 获取版本信息
+        id: versions
+        run: |
+          # 设置版本信息
+          DATE_TIME=$(date +%Y%m%d)
+          echo "date_time=$DATE_TIME" >> $GITHUB_OUTPUT
+          
+          # 获取 SPT 版本
+          SPT_VERSION=$(git ls-remote --tags "https://github.com/sp-tarkov/server-csharp.git" | awk -F'/' '{print $NF}' | grep -v '\^{}' | sort -V | tail -1)
+          SPT_VERSION=$(echo "$SPT_VERSION" | cut -d'-' -f1)
+          echo "spt_version=$SPT_VERSION" >> $GITHUB_OUTPUT
+          echo "SPT Version: $SPT_VERSION"
+          
+          # 获取客户端版本
+          CLIENT_VERSION=$(wget -qO- "https://raw.githubusercontent.com/sp-tarkov/server-csharp/develop/Libraries/SPTarkov.Server.Assets/SPT_Data/configs/core.json" | jq -r '.compatibleTarkovVersion')
+          echo "client_version=$CLIENT_VERSION" >> $GITHUB_OUTPUT
+          echo "Client Version: $CLIENT_VERSION"
+          
+          # 获取 Modules Commit ID
+          MODULES_COMMIT_ID=$(git ls-remote "https://github.com/sp-tarkov/modules.git" "refs/heads/master" | awk '{print $1}')
+          MODULES_COMMIT_ID=${MODULES_COMMIT_ID:0:8}
+          echo "modules_commit=$MODULES_COMMIT_ID" >> $GITHUB_OUTPUT
+          echo "Modules Commit: $MODULES_COMMIT_ID"
+          
+          # 获取 Launcher Commit ID
+          LAUNCHER_COMMIT_ID=$(git ls-remote "https://github.com/sp-tarkov/launcher.git" "refs/heads/master" | awk '{print $1}')
+          LAUNCHER_COMMIT_ID=${LAUNCHER_COMMIT_ID:0:8}
+          echo "launcher_commit=$LAUNCHER_COMMIT_ID" >> $GITHUB_OUTPUT
+          echo "Launcher Commit: $LAUNCHER_COMMIT_ID"
+
+      - name: 生成构建参数
+        id: params
+        run: |
+          # 是否构建modules
+          BUILD_MODULES="${{ github.event.inputs.build_modules || 'true' }}"
+          echo "build_modules=$BUILD_MODULES" >> $GITHUB_OUTPUT
+          
+          # 是否构建启动器
+          BUILD_LAUNCHER="${{ github.event.inputs.build_launcher || 'true' }}"
+          echo "build_launcher=$BUILD_LAUNCHER" >> $GITHUB_OUTPUT
+          
+          # 构建后是否压缩为zip
+          COMPRESS="${{ env.COMPRESS }}"
+          echo "compress=$COMPRESS" >> $GITHUB_OUTPUT
+          echo "COMPRESS: $COMPRESS"
+          
+          # 生成压缩文件名称
+          DATE_TIME="${{ steps.versions.outputs.date_time }}"
+          SPT_VERSION="${{ steps.versions.outputs.spt_version }}"
+          CLIENT_VERSION="${{ steps.versions.outputs.client_version }}"
+          MODULES_COMMIT="${{ steps.versions.outputs.modules_commit }}"
+          LAUNCHER_COMMIT="${{ steps.versions.outputs.launcher_commit }}"
+          if [ "$BUILD_MODULES" = "true" ] && [ "$BUILD_LAUNCHER" = "true" ]; then
+            ARCHIVE_NAME="SPT-Launcher-${SPT_VERSION}-$DATE_TIME-${CLIENT_VERSION}-L${LAUNCHER_COMMIT}-M${MODULES_COMMIT}.zip"
+          elif [ "$BUILD_MODULES" = "true" ]; then
+            ARCHIVE_NAME="SPT-Modules-${SPT_VERSION}-$DATE_TIME-${CLIENT_VERSION}-${MODULES_COMMIT}.zip"
+          else
+            ARCHIVE_NAME="SPT-Launcher-${SPT_VERSION}-$DATE_TIME-${CLIENT_VERSION}-${LAUNCHER_COMMIT}.zip"
+          fi
+          echo "archive_name=$ARCHIVE_NAME" >> $GITHUB_OUTPUT
+          echo "Archive Name: $ARCHIVE_NAME"
+          
+          # 构建modules时的Manage.zip文件路径
+          MANAGED_ZIP_FILE="${{ steps.managed.outputs.final_path }}"
+          echo "managed_zip_file=$MANAGED_ZIP_FILE" >> $GITHUB_OUTPUT
+          echo "MANAGED_ZIP_FILE: $MANAGED_ZIP_FILE"
+          
+          # 构建modules的分支
+          MODULES_BRANCH="${{ env.MODULES_BRANCH }}"
+          echo "modules_branch=$MODULES_BRANCH" >> $GITHUB_OUTPUT
+          echo "MODULES_BRANCH: $MODULES_BRANCH"
+          
+          # 构建launcher的分支
+          LAUNCHER_BRANCH="${{ env.LAUNCHER_BRANCH }}"
+          echo "launcher_branch=$LAUNCHER_BRANCH" >> $GITHUB_OUTPUT
+          echo "LAUNCHER_BRANCH: $LAUNCHER_BRANCH"
+          
+          # 打包时使用的build的分支
+          BUILD_BRANCH="${{ env.BUILD_BRANCH }}"
+          echo "build_branch=$BUILD_BRANCH" >> $GITHUB_OUTPUT
+          echo "BUILD_BRANCH: $BUILD_BRANCH"
+
+      - name: 构建编译
+        run: |         
+          # 执行构建脚本
+          ${{ env.BUILD_SCRIPT_DIR }}/build.sh \
+          "${{ steps.versions.outputs.date_time }}" \
+          "${{ steps.versions.outputs.spt_version }}" \
+          "${{ steps.versions.outputs.client_version }}" \
+          "${{ steps.versions.outputs.modules_commit }}" \
+          "${{ steps.versions.outputs.launcher_commit }}" \
+          "${{ steps.params.outputs.build_modules }}" \
+          "${{ steps.params.outputs.build_launcher }}" \
+          "${{ steps.params.outputs.compress }}" \
+          "${{ steps.params.outputs.archive_name }}" \
+          "${{ steps.params.outputs.managed_zip_file }}" \
+          "${{ steps.params.outputs.modules_branch }}" \
+          "${{ steps.params.outputs.launcher_branch }}" \
+          "${{ steps.params.outputs.build_branch }}"
+
+      - name: 获取上传文件名称
+        id: filename
+        run: |
+          if [ ! -d "${{ env.BUILD_SCRIPT_OUTPUT_DIR }}" ]; then
+            echo "错误：输出目录 ${{ env.BUILD_SCRIPT_OUTPUT_DIR }} 不存在"
+            exit 1
+          fi
+          ZIP_FILE=$(ls "${{ env.BUILD_SCRIPT_OUTPUT_DIR }}"/*.zip 2>/dev/null | head -1)
+          if [ -z "$ZIP_FILE" ]; then
+            echo "错误：在 ${{ env.BUILD_SCRIPT_OUTPUT_DIR }} 中未找到 zip 文件"
+            ls -la "${{ env.BUILD_SCRIPT_OUTPUT_DIR }}" || echo "目录内容无法列出"
+            exit 1
+          fi
           echo "zip_file=$ZIP_FILE" >> $GITHUB_OUTPUT
           echo "artifact_name=$(basename $ZIP_FILE)" >> $GITHUB_OUTPUT
 
-      - id: upload
-        name: upload
+      - name: 上传
         uses: https://github.com/christopherHX/gitea-upload-artifact@v4
         with:
-          name: ${{ steps.get-filename.outputs.artifact_name }}
-          path: ${{ steps.get-filename.outputs.zip_file }}
+          name: ${{ steps.filename.outputs.artifact_name }}
+          path: ${{ steps.filename.outputs.zip_file }}
