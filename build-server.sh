@@ -36,6 +36,7 @@ docker buildx build \
   --build-arg SPT_VERSION=$SPT_VERSION \
   --build-arg SPT_BUILD_TYPE=$SPT_BUILD_TYPE \
   --build-arg SPT_BUILD_CONFIG=Release \
+  --load \
   -f Dockerfile .
 
 # 检查上一个命令的退出状态
