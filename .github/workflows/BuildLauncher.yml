@@ -5,16 +5,27 @@ jobs:
   build-launcher:
     runs-on: ubuntu-24.04
     steps:
-      - name: checkout
+      - id: checkout
+        name: checkout
         uses: actions/checkout@v4
 
-      - name: build launcher
+      - id: build
+        name: build launcher
         run: |
           chmod a+x ./bin/*
           chmod a+x build-launcher.sh
           ./build-launcher.sh -l -c
 
-      - name: upload
+      - id: get-filename
+        name: get zip filename
+        run: |
+          ZIP_FILE=$(ls build-output/*.zip)
+          echo "zip_file=$ZIP_FILE" >> $GITHUB_OUTPUT
+          echo "artifact_name=$(basename $ZIP_FILE)" >> $GITHUB_OUTPUT
+
+      - id: upload
+        name: upload
         uses: https://github.com/christopherHX/gitea-upload-artifact@v4
         with:
-          path: build-output/*.zip
+          name: ${{ steps.get-filename.outputs.artifact_name }}
+          path: ${{ steps.get-filename.outputs.zip_file }}
