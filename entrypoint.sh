@@ -1,5 +1,6 @@
-#!/bin/bash
+#!/bin/sh
 
+# 文件对比
 if [ -f /opt/spt-server/SPTarkov.Server ]; then
   appHash=$(md5sum /app/spt-server/SPTarkov.Server | awk '{ print $1 }')
   exeHash=$(md5sum /opt/spt-server/SPTarkov.Server | awk '{ print $1 }')
@@ -16,42 +17,29 @@ else
   echo "Finished!"
 fi
 
-cd /opt/spt-server
+cd /opt/spt-server || exit
 
-if [ -z "$ip" ]; then
-  IP="0.0.0.0"
-else
-  IP=$ip
-fi
+# IP 配置
+IP="${ip:-0.0.0.0}"
 
-if [ -z "$backendIp" ]; then
-  BACKEND_IP=$(hostname -I | awk '{print $1}')
-else
-  BACKEND_IP=$backendIp
-fi
+# 自动获取IP,端口等配置
+BACKEND_IP="${backendIp:-$(ip route get 1 | awk '{print $7}')}"
+PORT="${backendPort:-6969}"
+PINGDELAYMS="${webSocketPingDelayMs:-90000}"
 
-if [ -z "$backendPort" ]; then
-  PORT=6969
-else
-  PORT=$backendPort
-fi
+# 配置文件替换
+sed -Ei "s/\"ip\": \".*?\",/\"ip\": \"${IP}\",/g" SPT_Data/configs/http.json
+sed -Ei "s/\"port\": [0-9]+,/\"port\": ${PORT},/g" SPT_Data/configs/http.json
+sed -Ei "s/\"backendIp\": \".*?\",/\"backendIp\": \"${BACKEND_IP}\",/g" SPT_Data/configs/http.json
+sed -Ei "s/\"backendPort\": [0-9]+,/\"backendPort\": ${PORT},/g" SPT_Data/configs/http.json
+sed -Ei "s/\"webSocketPingDelayMs\": [0-9]+,/\"webSocketPingDelayMs\": ${PINGDELAYMS},/g" SPT_Data/configs/http.json
 
-if [ -z "$webSocketPingDelayMs" ]; then
-  PINGDELAYMS=90000
-else
-  PINGDELAYMS=$webSocketPingDelayMs
-fi
-
-sed -Ei "s/\"ip\": \"(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\",/\"ip\": \"${IP}\",/g" SPT_Data/configs/http.json
-sed -Ei "s/\"port\": ([0-9]|[1-9][1-9]{1,3}|[1-5][0-9]{4}|6[1-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5]),/\"port\": ${PORT},/g" SPT_Data/configs/http.json
-sed -Ei "s/\"backendIp\": \"(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\",/\"backendIp\": \"${BACKEND_IP}\",/g" SPT_Data/configs/http.json
-sed -Ei "s/\"backendPort\": ([0-9]|[1-9][1-9]{1,3}|[1-5][0-9]{4}|6[1-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5]),/\"backendPort\": ${PORT},/g" SPT_Data/configs/http.json
-sed -Ei "s/\"webSocketPingDelayMs\": ([0-9]{1,}),/\"webSocketPingDelayMs\": ${PINGDELAYMS},/g" SPT_Data/configs/http.json
-
+# 日志文件创建
 if [ ! -f "sptLogger.json" ]; then
   if [ -f "sptLogger.Development.json" ]; then
     cp sptLogger.Development.json sptLogger.json
   fi
 fi
 
-chmod +x SPT.Server.Linux && ./SPT.Server.Linux
+chmod +x SPT.Server
+exec ./SPT.Server
