@@ -33,19 +33,17 @@ jobs:
     container: refringe/spt-build-dotnet:2.1.0
 
     steps:
-      - name: 克隆代码
+      - name: 安装必要工具
         run: |
-          # 直接克隆当前仓库
-          git clone --depth 1 https://gitea.yanghuanglin.cn/${{ github.repository }} .
-          git checkout ${{ github.ref }}
+          # 安装必要工具
+          apt update -y
+          apt install zip unzip wget jq nodejs -y
+
+      - name: 克隆代码
+        uses: actions/checkout@v4
 
       - name: 配置环境
         run: |
-          # 安装必要工具
-          cp bin/* /usr/bin/
-          apt update -y
-          apt install zip unzip wget jq nodejs -y
-          
           # 创建脚本目录和输出目录
           echo "创建脚本目录${{ env.BUILD_SCRIPT_DIR }}和输出目录${{ env.BUILD_SCRIPT_OUTPUT_DIR }}"
           mkdir -p ${{ env.BUILD_SCRIPT_DIR }}
@@ -57,7 +55,7 @@ jobs:
           # 复制构建脚本
           cp build.sh ${{ env.BUILD_SCRIPT_DIR }}
 
-      - name: 获取Managed.zip
+      - name: 获取 Managed.zip
         id: managed
         if: ${{ github.event.inputs.build_modules == 'true' }}
         run: |
