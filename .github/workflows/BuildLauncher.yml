@@ -24,7 +24,7 @@ env:
   BUILD_BRANCH: main
   COMPRESS: true
   BUILD_SCRIPT_DIR: /tmp/build
-  BUILD_SCRIPT_OUTPUT_DIR: ${{ env.BUILD_SCRIPT_DIR }}/output
+  BUILD_SCRIPT_OUTPUT_DIR: /tmp/build/output
   MANAGED_ZIP_FILE: Managed.zip
 
 jobs:
