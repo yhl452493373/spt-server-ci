@@ -31,13 +31,16 @@ jobs:
   build-spt:
     runs-on: ubuntu-latest
     container: refringe/spt-build-dotnet:2.1.0
+    defaults:
+      run:
+        shell: bash
 
     steps:
       - name: 安装必要工具
         run: |
           # 安装必要工具
           apt update -y
-          apt install zip unzip wget jq nodejs bash -y
+          apt install zip unzip nodejs -y
 
       - name: 克隆代码
         uses: actions/checkout@v4
