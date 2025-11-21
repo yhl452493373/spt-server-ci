@@ -63,11 +63,6 @@ jobs:
       - name: 设置构建脚本执行权限
         run: chmod +x build-server.sh
 
-      - name: 安装依赖
-        run: |
-          sudo apt update
-          sudo apt install -y jq
-
       - name: 构建 Docker 镜像
         run: |
           # 运行构建脚本
