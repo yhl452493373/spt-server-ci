@@ -10,4 +10,5 @@ jobs:
       - name: build launcher
         run: |
           chmod a+x ./bin/*
+          chmod a+x build-launcher.sh
           ./build-launcher.sh
