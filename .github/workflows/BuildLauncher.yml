@@ -2,6 +2,15 @@ name: 构建启动器
 on:
   workflow_dispatch:
     inputs:
+      runner_os:
+        description: 选择运行器系统
+        type: choice
+        required: true
+        default: 'ubuntu-latest'
+        options:
+          - ubuntu-latest
+          - ubuntu-24.04
+          - ubuntu-host
       build_modules:
         description: '构建 Modules'
         required: true
@@ -29,7 +38,7 @@ env:
 
 jobs:
   build-spt:
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runner_os }}
     container: refringe/spt-build-dotnet:2.1.0
     defaults:
       run:

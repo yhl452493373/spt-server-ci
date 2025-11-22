@@ -28,7 +28,7 @@ env:
 
 jobs:
   build-server:
-    runs-on:  ${{ inputs.runner_os }}
+    runs-on: ${{ inputs.runner_os }}
 
     steps:
       - name: 检出代码
