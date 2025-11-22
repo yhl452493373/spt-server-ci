@@ -170,7 +170,7 @@ fi
 chmod a+x bin/*
 
 # 添加容器镜像和构建脚本
-DOCKER_CMD="$DOCKER_CMD refringe/spt-build-dotnet:2.1.0"
+DOCKER_CMD="$DOCKER_CMD mcr.microsoft.com/dotnet/sdk:9.0"
 DOCKER_CMD="$DOCKER_CMD /build.sh"
 DOCKER_CMD="$DOCKER_CMD \"$DATE_TIME\""
 DOCKER_CMD="$DOCKER_CMD \"$SPT_VERSION\""
@@ -197,7 +197,7 @@ eval $DOCKER_CMD
 #  -v "./build.sh:/build.sh:ro" \
 #  -v "./bin/zip:/usr/bin/zip:ro" \
 #  -v "./bin/unzip:/usr/bin/unzip:ro" \
-#  refringe/spt-build-dotnet:2.1.0 \
+#  mcr.microsoft.com/dotnet/sdk:9.0 \
 #  /build.sh \
 #  "$DATE_TIME" \
 #  "$SPT_VERSION" \
