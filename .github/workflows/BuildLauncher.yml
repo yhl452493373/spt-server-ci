@@ -40,7 +40,7 @@ env:
 jobs:
   build-launcher:
     runs-on: ${{ inputs.runner_os }}
-    container: refringe/spt-build-dotnet:2.1.0
+    container: mcr.microsoft.com/dotnet/sdk:9.0
     defaults:
       run:
         shell: bash
