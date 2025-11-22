@@ -37,7 +37,7 @@ env:
   MANAGED_ZIP_FILE: Managed.zip
 
 jobs:
-  build-spt:
+  build-launcher:
     runs-on: ${{ inputs.runner_os }}
     container: refringe/spt-build-dotnet:2.1.0
     defaults:
