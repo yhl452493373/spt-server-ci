@@ -1,6 +1,6 @@
 #!/bin/bash
-SPT_SERVER_REPOSITORY=sp-tarkov/server-csharp
-SPT_SERVER_BRANCH=main
+SPT_SERVER_REPOSITORY="sp-tarkov/server-csharp"
+SPT_SERVER_BRANCH="develop"
 
 # 设置默认用户名，支持从参数传入
 DOCKER_USERNAME="yhl452493373"

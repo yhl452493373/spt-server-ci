@@ -94,7 +94,7 @@ fi
 echo "正在获取版本信息..."
 DATE_TIME=$(date +%Y%m%d)
 SPT_SERVER_REPOSITORY="sp-tarkov/server-csharp"
-SPT_SERVER_BRANCH="main"
+SPT_SERVER_BRANCH="develop"
 SPT_MODULES_REPOSITORY="sp-tarkov/modules"
 SPT_MODULES_BRANCH="master"
 SPT_LAUNCHER_REPOSITORY="sp-tarkov/launcher"
