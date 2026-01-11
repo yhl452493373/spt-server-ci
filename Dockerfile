@@ -3,7 +3,7 @@
 # ================================
 #FROM mcr.microsoft.com/dotnet/sdk:9.0-alpine AS build
 #FROM mcr.azure.cn/dotnet/sdk:9.0-alpine AS build
-FROM mcr.microsoft.com/dotnet/nightly/sdk:9.0-alpine AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS build
 
 ARG SPT_VERSION
 ARG SPT_BUILD_TYPE
@@ -35,7 +35,7 @@ RUN dotnet publish ./SPTarkov.Server/SPTarkov.Server.csproj \
 # ================================
 #FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS final
 #FROM mcr.azure.cn/dotnet/aspnet:9.0-alpine AS final
-FROM mcr.microsoft.com/dotnet/nightly/aspnet:9.0-alpine AS final
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS final
 
 ARG SPT_BUILD_CONFIG
 
