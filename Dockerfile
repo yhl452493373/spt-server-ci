@@ -27,6 +27,7 @@ RUN dotnet publish ./SPTarkov.Server/SPTarkov.Server.csproj \
     -p:SptBuildTime=$(date +%Y%m%d) \
     -p:SptCommit=$(git rev-parse --short HEAD) \
     -p:IsPublish=true && \
+    -p:LangVersion=preview && \
     ls -l /src/SPTarkov.Server/bin/$SPT_BUILD_CONFIG/net9.0/linux-musl-x64/publish
 
 # ================================
